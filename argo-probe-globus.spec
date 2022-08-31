@@ -45,6 +45,8 @@ rm -rf $RPM_BUILD_ROOT
 %{dir}/refresh_proxy
 
 %changelog
+* Wed Aug 31 2022 Katarina Zailac <kzailac@srce.hr> - 0.2.0-1%{?dist}
+- Version bump.
 * Thu May 4 2017 Emir Imamagic <eimamagi@srce.hr> - 0.1.5-1%{?dist}
 - Version bump.
 * Fri Feb 10 2017 Emir Imamagic <eimamagi@srce.hr> - 0.1.4-1%{?dist}
