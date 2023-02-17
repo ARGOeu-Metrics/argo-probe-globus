@@ -388,13 +388,14 @@ $tempProxy = $plugin->opts->proxy."_$$";
 $ENV{X509_USER_PROXY} = $tempProxy;
 
 my @type;
+my $bits = $plugin->opts->get('bits');
 
 if ($plugin->opts->get('robot-cert')) {
     my $robotCert = $plugin->opts->get('robot-cert');
     my $robotKey = $plugin->opts->get('robot-key') || $robotCert;
     $ENV{X509_USER_CERT} = $robotCert;
     $ENV{X509_USER_KEY} = $robotKey;
-    $cmd = "$COMMANDS{VOMS_PROXY_INIT} --rfc --out $tempProxy --voms $VONAME --valid $voProxyLifetime";
+    $cmd = "$COMMANDS{VOMS_PROXY_INIT} -b $bits --rfc --out $tempProxy --voms $VONAME --valid $voProxyLifetime";
     @type = ('--rfc', 'RFC');
 }
 else {
@@ -411,7 +412,6 @@ else {
 
     my $tmpType = `$COMMANDS{VOMS_PROXY_INFO} --file $tempProxy --type`;
     @type = ($tmpType =~ /rfc/i) ? ('--rfc', 'RFC') : ('--old', 'legacy');
-    my $bits = $plugin->opts->get('bits');
 
     # this is needed in case when user is root
     # otherwise voms-proxy-init doesn't work
