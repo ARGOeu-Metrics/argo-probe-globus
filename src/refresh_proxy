@@ -39,10 +39,10 @@
 #
 # 16-Dec-2009 - 1.7 Migrated to Apache 2.0 license
 #
-# 23-Aug-2010 - Migrated to Nagios::Plugin.
+# 23-Aug-2010 - Migrated to Monitoring::Plugin.
 
 use strict;
-use Nagios::Plugin;
+use Monitoring::Plugin;
 use File::Copy;
 use GridMon::sgutils qw($VONAME &checkProxy &processCommand);
 use GridMon::Nagios qw(nagios_debug);
@@ -54,7 +54,7 @@ $SIG{__DIE__}  = \&No::Worries::Die::handler;
 syslog_open(ident => "refresh_proxy", facility => "user");
 nagios_debug("started");
 
-# Standard variables used in Nagios::Plugin constructor
+# Standard variables used in Monitoring::Plugin constructor
 use constant PROGNAME => "refresh_proxy";
 use constant VERSION => '1.6';
 use constant DESCRIPTION => 'Nagios plugin for retrieving VOMS/grid proxy certificate';
@@ -68,7 +68,6 @@ Copyright 2009 Emir Imamagic';
 use constant SHORTNAME => 'GridProxy-Get';
 use constant USAGE => "usage: $0 [ -v ] \n";
 use constant DEFAULT_PORT => 7512;
-use constant DEFAULT_MYPROXY_USER => 'nagios';
 use constant DEFAULT_CERT => '/etc/nagios/globus/hostcert.pem';
 use constant DEFAULT_KEY => '/etc/nagios/globus/hostkey.pem';
 
@@ -81,30 +80,6 @@ sub processErrorOutput {
     $res =~ s/\n//g;
 
     return $res;
-}
-
-sub createMyProxy {
-    my $command = shift;
-    my $verbose = shift;
-
-    my $state = OK;
-    my $answer;
-    my $res;
-
-    print "COMMAND: $command\n" if ($verbose);
-
-    ($state, $res) = processCommand ("$command 2>&1");
-
-    if ($state == CRITICAL) {
-        print "ERROR: proxy creation failed\n" if ($verbose);
-        $answer = "Getting MyProxy credential failed: " . processErrorOutput($res);
-    } elsif ($state == UNKNOWN) {
-        $answer = $res;
-    } else {
-        $answer = "MyProxy credential retrieved. ";
-        $res = undef;
-    }
-    return ($state, $answer, $res);
 }
 
 sub createVomsProxy {
@@ -196,11 +171,11 @@ sub printOutputClean {
 
 # Local variables
 my ($state,$answer,$res);
-my ($timeoutanswer,$tmpAnswer,$myProxyUser,$proxyName,$proxyLifetime);
+my ($timeoutanswer,$tmpAnswer,$proxyName,$proxyLifetime);
 my ($proxyUID, $proxyGID, $tempProxy,$cmd);
 
-# Create Nagios::Plugin instance
-my $plugin = Nagios::Plugin->new (usage => USAGE,
+# Create Monitoring::Plugin instance
+my $plugin = Monitoring::Plugin->new (usage => USAGE,
                                   shortname => SHORTNAME,
                                   version => VERSION,
                                   blurb => DESCRIPTION,
@@ -237,25 +212,8 @@ $plugin->add_arg(
     required => 0,
 );
 $plugin->add_arg(
-    spec => 'cert=s',
-    help => "Location of service certificate used to protect
-   trusted MyProxy proxy.
-   (default: ".DEFAULT_CERT.")",
-    required => 0,
-    default => DEFAULT_CERT
-);
-$plugin->add_arg(
-    spec => 'key=s',
-    help => "Location of service certificate key used to protect
-   trusted MyProxy proxy.
-   (default: ".DEFAULT_KEY.")",
-    required => 0,
-    default => DEFAULT_KEY
-);
-$plugin->add_arg(
     spec => 'robot-cert=s',
-    help => "Location of a Robot certificate to use.  This option disables the
-   use of MyProxy.\n   (default: not set, use MyProxy)",
+    help => "Location of a Robot certificate to use.",
     required => 0,
 );
 $plugin->add_arg(
@@ -263,25 +221,6 @@ $plugin->add_arg(
     help => "Location of the key part of the Robot certificate.
    (default: same as --robot-cert).",
     required => 0,
-);
-$plugin->add_arg(
-    spec => 'name=s',
-    help => "Name of MyProxy credential to use.
-   (Default: )",
-    required => 0
-);
-$plugin->add_arg(
-    spec => 'myproxyuser=s',
-    help => "myproxyuser
-   Name of MyProxy account under which the credential
-   was stored.
-   Probe uses MyProxy account (option -l) instead of user
-   DNs (-d) because probe refresh the credential without
-   knowing the DN of user certificate which was used for
-   creating MyProxy credential.
-   (Default: ".DEFAULT_MYPROXY_USER.")",
-    required => 0,
-    default => DEFAULT_MYPROXY_USER
 );
 $plugin->add_arg(
     spec => 'localuser=s',
@@ -328,11 +267,8 @@ $plugin->add_arg(
     required => 0,
 );
 
-
 $plugin->getopts;
 
-$myProxyUser = $plugin->opts->myproxyuser;
-$proxyName = $plugin->opts->name;
 $proxyLifetime = $plugin->opts->lifetime;
 my $voProxyLifetime;
 
@@ -346,11 +282,7 @@ if ($proxyLifetime =~ /^\d+$/) {
 $VONAME = $plugin->opts->vo if ($plugin->opts->vo);
 $VONAME .= ":".$plugin->opts->get('vo-fqan') if ($plugin->opts->get('vo-fqan'));
 
-$ENV{'X509_USER_CERT'}=$plugin->opts->cert if ($plugin->opts->cert);
-$ENV{'X509_USER_KEY'}=$plugin->opts->key if ($plugin->opts->key);
-
 my $globusLocation = $ENV{GLOBUS_LOCATION} || "/usr";
-$COMMANDS{MY_PROXY_LOGON}  = "$globusLocation/bin/myproxy-logon";
 $globusLocation = $ENV{GLITE_LOCATION} || "/usr";
 $COMMANDS{VOMS_PROXY_INIT} = "$globusLocation/bin/voms-proxy-init";
 $COMMANDS{VOMS_PROXY_INFO} = "$globusLocation/bin/voms-proxy-info";
@@ -397,27 +329,6 @@ if ($plugin->opts->get('robot-cert')) {
     $ENV{X509_USER_KEY} = $robotKey;
     $cmd = "$COMMANDS{VOMS_PROXY_INIT} -b $bits --rfc --out $tempProxy --voms $VONAME --valid $voProxyLifetime";
     @type = ('--rfc', 'RFC');
-}
-else {
-    $timeoutanswer = "Timeout occured during MyProxy operation.";
-    $cmd = "$COMMANDS{MY_PROXY_LOGON} -l $myProxyUser -s ".$plugin->opts->hostname." -p ".$plugin->opts->port." -o $tempProxy -t $proxyLifetime";
-    $cmd .= " -k $proxyName" if ($proxyName);
-    $cmd .= " -n";
-
-    ($state,$answer,$res) = createMyProxy($cmd, $plugin->opts->verbose);
-    if ( $state != OK) {
-	$answer .= " Keeping existing proxy.\n";
-	printOutputClean ($state,$answer,$res, $tempProxy, $plugin);
-    }
-
-    my $tmpType = `$COMMANDS{VOMS_PROXY_INFO} --file $tempProxy --type`;
-    @type = ($tmpType =~ /rfc/i) ? ('--rfc', 'RFC') : ('--old', 'legacy');
-
-    # this is needed in case when user is root
-    # otherwise voms-proxy-init doesn't work
-    $ENV{X509_USER_CERT} = $tempProxy;
-    $ENV{X509_USER_KEY} = $tempProxy;
-    $cmd = "$COMMANDS{VOMS_PROXY_INIT} -b $bits --out $tempProxy --voms $VONAME --noregen --valid $voProxyLifetime $type[0]";
 }
 
 $timeoutanswer = "Timeout occured during VOMS proxy init operation.";

@@ -28,10 +28,10 @@
 #
 # 16-Dec-2009 - 1.4 Migrated to Apache 2.0 license
 #
-# 23-Aug-2010 - Migrated to Nagios::Plugin.
+# 23-Aug-2010 - Migrated to Monitoring::Plugin.
 
 use strict;
-use Nagios::Plugin;
+use Monitoring::Plugin;
 use GridMon::sgutils qw($VONAME &checkProxy &processCommand);
 use GridMon::Nagios qw(nagios_debug);
 use No::Worries::Syslog qw(syslog_open);
@@ -42,7 +42,7 @@ $SIG{__DIE__}  = \&No::Worries::Die::handler;
 syslog_open(ident => "GridProxy-probe", facility => "user");
 nagios_debug("started");
 
-# Standard variables used in Nagios::Plugin constructor
+# Standard variables used in Monitoring::Plugin constructor
 use constant PROGNAME => "GridProxy-probe";
 use constant VERSION => '1.5';
 use constant DESCRIPTION => 'Probe for checking grid proxy certificate';
@@ -69,8 +69,8 @@ sub processErrorOutput {
 my ($state,$answer,$res);
 my $cmd;
 
-# Create Nagios::Plugin instance
-my $plugin = Nagios::Plugin->new (usage => USAGE,
+# Create Monitoring::Plugin instance
+my $plugin = Monitoring::Plugin->new (usage => USAGE,
                                   shortname => SHORTNAME,
                                   version => VERSION,
                                   blurb => DESCRIPTION,

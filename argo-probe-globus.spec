@@ -2,7 +2,7 @@
 
 Summary: ARGO probes for Globus Toolkit services
 Name: argo-probe-globus
-Version: 0.2.0
+Version: 0.3.0
 Release: 1%{?dist}
 License: ASL 2.0
 Group: Network/Monitoring
@@ -12,8 +12,6 @@ BuildArch: noarch
 Requires: perl-GridMon >= 1.0.28
 Requires: voms-clients
 Requires: globus-proxy-utils
-Requires: myproxy
-Requires: globus-gram-client-tools
 Requires: uberftp
 Requires: globus-gass-copy-progs
 
@@ -27,10 +25,8 @@ Requires: globus-gass-copy-progs
 %install
 rm -rf $RPM_BUILD_ROOT
 install --directory ${RPM_BUILD_ROOT}%{dir}
-install --mode 755 ./GRAM-probe  ${RPM_BUILD_ROOT}%{dir}
 install --mode 755 ./GridFTP-probe  ${RPM_BUILD_ROOT}%{dir}
 install --mode 755 ./GridProxy-probe  ${RPM_BUILD_ROOT}%{dir}
-install --mode 755 ./MyProxy-probe  ${RPM_BUILD_ROOT}%{dir}
 install --mode 755 ./refresh_proxy ${RPM_BUILD_ROOT}%{dir}
 
 %clean
@@ -38,13 +34,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%{dir}/GRAM-probe
 %{dir}/GridFTP-probe
 %{dir}/GridProxy-probe
-%{dir}/MyProxy-probe
 %{dir}/refresh_proxy
 
 %changelog
+* Thu Jun 20 2024 Emir Imamagic <eimamagi@srce.hr> - 0.3.0-1%{?dist}
+- Migrate argo-probe-globus to Rocky 9
+- Remove GRAM-probe & MyProxy-probe
 * Wed Aug 31 2022 Katarina Zailac <kzailac@srce.hr> - 0.2.0-1%{?dist}
 - Version bump.
 * Thu May 4 2017 Emir Imamagic <eimamagi@srce.hr> - 0.1.5-1%{?dist}
