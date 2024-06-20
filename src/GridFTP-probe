@@ -36,10 +36,10 @@
 #
 # 16-Dec-2009 - 1.7 Migrated to Apache 2.0 license
 #
-# 23-Aug-2010 - Migrated to Nagios::Plugin.
+# 23-Aug-2010 - Migrated to Monitoring::Plugin.
 
 use strict;
-use Nagios::Plugin;
+use Monitoring::Plugin;
 use Sys::Hostname;
 use GridMon::sgutils qw($VONAME &checkProxy &processCommand);
 use GridMon::Nagios qw(nagios_debug);
@@ -51,7 +51,7 @@ $SIG{__DIE__}  = \&No::Worries::Die::handler;
 syslog_open(ident => "GridFTP-probe", facility => "user");
 nagios_debug("started");
 
-# Standard variables used in Nagios::Plugin constructor
+# Standard variables used in Monitoring::Plugin constructor
 use constant PROGNAME => "GridFTP-probe";
 use constant VERSION => '1.8';
 use constant DESCRIPTION => 'Probe for checking GridFTP server via file transfer';
@@ -241,8 +241,8 @@ my ($hostname,$port);
 my ($localurl,$serviceurl,$timeoutanswer,$distPath,$localDir);
 my $myData = time();
 
-# Create Nagios::Plugin instance
-my $plugin = Nagios::Plugin->new (usage => USAGE,
+# Create Monitoring::Plugin instance
+my $plugin = Monitoring::Plugin->new (usage => USAGE,
                                   shortname => SHORTNAME,
                                   version => VERSION,
                                   blurb => DESCRIPTION,
