@@ -39,7 +39,7 @@ rm -rf $RPM_BUILD_ROOT
 %{dir}/refresh_proxy
 
 %changelog
-* Thu Jun 20 2024 Emir Imamagic <eimamagi@srce.hr> - 0.3.0-1%{?dist}
+* Wed Aug 14 2024 Katarina Zailac <kzailac@srce.hr> - 0.3.0-1%{?dist}
 - Migrate argo-probe-globus to Rocky 9
 - Remove GRAM-probe & MyProxy-probe
 * Wed Aug 31 2022 Katarina Zailac <kzailac@srce.hr> - 0.2.0-1%{?dist}
